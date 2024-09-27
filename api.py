@@ -1,56 +1,61 @@
+from fastapi import FastAPI
 import numpy as np
 import pickle
-from fastapi import FastAPI
-from pydantic import BaseModel
-
 
 app = FastAPI()
 
+# Load the pre-trained model and the scaler
+with open("model.pkl", "rb") as f:
+    randclf = pickle.load(f)
 
-with open('model.pkl', 'rb') as f:
-    model = pickle.load(f)
-
-with open('minmaxscaler.pkl', 'rb') as f:
+with open("minmaxscaler.pkl", "rb") as f:
     mx = pickle.load(f)
 
-
+# Crop label to name mapping
 reverse_crop_dict = {
-    1: 'rice', 2: 'maize', 3: 'chickpea', 4: 'kidneybeans', 5: 'pigeonpeas', 
-    6: 'mothbeans', 7: 'mungbean', 8: 'blackgram', 9: 'lentil', 10: 'pomegranate', 
-    11: 'banana', 12: 'mango', 13: 'grapes', 14: 'watermelon', 15: 'muskmelon', 
-    16: 'apple', 17: 'orange', 18: 'papaya', 19: 'coconut', 20: 'cotton', 
-    21: 'jute', 22: 'coffee'
+    1: 'rice',
+    2: 'maize',
+    3: 'chickpea',
+    4: 'kidneybeans',
+    5: 'pigeonpeas',
+    6: 'mothbeans',
+    7: 'mungbean',
+    8: 'blackgram',
+    9: 'lentil',
+    10: 'pomegranate',
+    11: 'banana',
+    12: 'mango',
+    13: 'grapes',
+    14: 'watermelon',
+    15: 'muskmelon',
+    16: 'apple',
+    17: 'orange',
+    18: 'papaya',
+    19: 'coconut',
+    20: 'cotton',
+    21: 'jute',
+    22: 'coffee'
 }
 
+# Root endpoint
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the Crop Recommendation API! Go to /docs for API documentation."}
 
-class CropInput(BaseModel):
-    N: float
-    P: float
-    K: float
-    temperature: float
-    humidity: float
-    ph: float
-    rainfall: float
-
-
-@app.post('/recommend')
-def recommend(crop_input: CropInput):
+# Crop recommendation endpoint (POST request)
+@app.post("/recommend")
+def recommend(N: int, P: int, K: int, temperature: float, humidity: float, ph: float, rainfall: float):
+    # Input features as a numpy array
+    features = np.array([[N, P, K, temperature, humidity, ph, rainfall]])
     
-    features = np.array([[crop_input.N, crop_input.P, crop_input.K,
-                          crop_input.temperature, crop_input.humidity,
-                          crop_input.ph, crop_input.rainfall]])
+    # Scale the input features
     mx_features = mx.transform(features)
-
     
-    label = model.predict(mx_features)[0]
-
+    # Predict the crop label
+    label = randclf.predict(mx_features)[0]
     
-    crop_name = reverse_crop_dict.get(label, "Unknown Crop")
+    # Convert the label to the crop name
+    crop_name = reverse_crop_dict[label]
+    
+    return {"Recommended Crop": crop_name}
 
-   
-    return {'recommended_crop': crop_name}
-
-
-if __name__ == '__main__':
-    import uvicorn
-    uvicorn.run(app, host='127.0.0.1', port=8000)
