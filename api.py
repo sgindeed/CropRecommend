@@ -35,7 +35,7 @@ class CropInput(BaseModel):
 
 @app.post('/recommend')
 def recommend(crop_input: CropInput):
-    # Prepare the feature array
+    
     features = np.array([[crop_input.N, crop_input.P, crop_input.K,
                           crop_input.temperature, crop_input.humidity,
                           crop_input.ph, crop_input.rainfall]])
