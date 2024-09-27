@@ -1,6 +1,6 @@
 
 
-```markdown
+
 # Crop Recommendation System
 
 This repository contains a Crop Recommendation System that predicts the best crops to grow based on various environmental factors. It includes a machine learning model, an API for crop recommendations, and a Streamlit application for user interaction.
