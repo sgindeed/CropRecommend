@@ -7,3 +7,4 @@ uvicorn
 numpy
 scikit-learn
 pandas
+django
