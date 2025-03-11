@@ -1,12 +1,11 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware  # Import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware 
 from pydantic import BaseModel
 import numpy as np
 import pickle
 
 app = FastAPI()
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Replace "*" with a specific origin (e.g., ["http://localhost:5173"]) to restrict access
@@ -15,14 +14,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load the model and scaler
 with open('model.pkl', 'rb') as f:
     randclf = pickle.load(f)
 
 with open('minmaxscaler.pkl', 'rb') as f:
     mx = pickle.load(f)
 
-# Reverse dictionary to map labels back to crop names
 reverse_crop_dict = {
     1: 'rice', 2: 'maize', 3: 'chickpea', 4: 'kidneybeans', 5: 'pigeonpeas',
     6: 'mothbeans', 7: 'mungbean', 8: 'blackgram', 9: 'lentil', 10: 'pomegranate',
@@ -31,7 +28,7 @@ reverse_crop_dict = {
     21: 'jute', 22: 'coffee'
 }
 
-# Define the input model for the API
+
 class CropRecommendationInput(BaseModel):
     N: int
     P: int
@@ -56,11 +53,11 @@ def recommend_crop(input: CropRecommendationInput):
     ph = input.ph
     rainfall = input.rainfall
     
-    # Prepare features for prediction
+    
     features = np.array([[N, P, K, temperature, humidity, ph, rainfall]])
     mx_features = mx.transform(features)
     
-    # Predict the crop
+    
     label = randclf.predict(mx_features)[0]
     crop_name = reverse_crop_dict[label]
     
